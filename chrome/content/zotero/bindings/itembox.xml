@@ -619,7 +619,13 @@
 					}
 					else {
 						label.setAttribute("onclick",
-							"if (this.nextSibling.inputField) { this.nextSibling.inputField.blur(); }");
+							"var self=this;setTimeout("
+							+ "function(){"
+							+     "if(self.nextSibling.inputField){"
+							+         "self.nextSibling.inputField.blur();"
+							+     "}"
+							+ "},20);"
+						);
 						label.setAttribute("contextmenu", "mlz-language-menu");
 					}
 					
@@ -1092,7 +1098,9 @@
 					var typeBox = document.createElement("hbox");
 					typeBox.setAttribute("typeid", typeID);
 					if (!parentNode) {
-						typeBox.setAttribute("popup", "creator-type-menu");
+						typeBox.addEventListener('click',function(event){
+							document.getBindingParent(this).openCreatorTypeMenu(event);
+						});
 					}
 					typeBox.setAttribute("fieldname", 'creator-' + this._creatorCount + '-typeID');
 					if (langTag) {
@@ -1247,7 +1255,35 @@
 				</body>
 			</method>
 			
+
+			<method name="openCreatorTypeMenu">
+				<parameter name="event"/>
+				<body>
+				<![CDATA[
+							if (event.button !== 0) return true;
+							var popupNode = event.target;
+							var row = Zotero.getAncestorByTagName(popupNode, "row");
+							var fieldParent = row.firstChild.nextSibling.firstChild;
+							var inputField = null;
+							if (fieldParent.firstChild.inputField) {
+								var inputField = fieldParent.firstChild.inputField;
+							} else if (fieldParent.lastChild.inputField) {
+								var inputField = fieldParent.lastChild.inputField;
+							}
+							if (inputField) {
+								setTimeout(function() {
+									inputField.blur();
+								}, 50);
+							} else {
+								var menuNode = document.getBindingParent(popupNode)._creatorTypeMenu;
+								document.popupNode = popupNode;
+								menuNode.openPopup(popupNode, "after_start", 0, 0, false, false);
+							}
+				]]>
+				</body>
+			</method>
 			
+
 			<method name="addMoreCreatorsRow">
 				<parameter name="num"/>
 				<body>
@@ -3202,7 +3238,7 @@
 			<method name="swapNames">
 				<body><![CDATA[
 					var row = Zotero.getAncestorByTagName(document.popupNode, 'row');
-					var typeBox = row.getElementsByAttribute('popup', 'creator-type-menu')[0];
+					var typeBox = row.getElementsByClassName('creator-type-label')[0];
 					var creatorIndex = parseInt(typeBox.getAttribute('fieldname').split('-')[1]);
 					var fields = this.getCreatorFields(row);
 					var lastName = fields.lastName;
@@ -3520,7 +3556,7 @@
 					</menupopup>
 					<menupopup id="zotero-creator-transform-menu"
 						onpopupshowing="var row = Zotero.getAncestorByTagName(document.popupNode, 'row');
-							var typeBox = row.getElementsByAttribute('popup', 'creator-type-menu')[0];
+							var typeBox = row.getElementsByClassName('creator-type-label')[0];
 							var index = parseInt(typeBox.getAttribute('fieldname').split('-')[1]);
 							var item = document.getBindingParent(this).item;
 							var exists = item.hasCreatorAt(index);
