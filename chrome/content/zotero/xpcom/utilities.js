@@ -1963,6 +1963,7 @@ Zotero.Utilities = {
 		// separate name variables
 		var author = Zotero.CreatorTypes.getName(Zotero.CreatorTypes.getPrimaryIDForType(itemTypeID));
 		var creators = zoteroItem.creators;
+        if (!creators) creators = [];
 
 		if (!portableJSON && !stopAuthority) {
 			if (cslItem.authority) {
